@@ -23,7 +23,7 @@ void loop() {
   else
     delay(4000);
 
-  servo.write(180);
+  servo.write(90);
   delay(2000);
   servo.write(0);
 }
