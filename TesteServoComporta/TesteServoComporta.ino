@@ -8,7 +8,9 @@ int angle = 0;
 int firstIterationFlag = 1;
 
 void setup() {
-  
+  pinMode(13, OUTPUT);
+  digitalWrite(13, HIGH);
+
   servo.attach(SERVO_PIN);
   servo.write(angle);
 
