@@ -1,30 +1,43 @@
 #include <Thermistor.h>
+#include <Servo.h>
 
 #define MAKE_COFFEE '1'
 #define STOP '0'
-#define MAX_TEMPERATURE 80
+#define MAX_TEMPERATURE 70
+//#define MAX_TEMPERATURE 70
+//#define MAX_TEMPERATURE 85
 #define BOILER_RELAY_PORT 8
 #define VALVE_RELAY_PORT 12
+#define DC_RELAY_PORT 7
+#define SERVO_PORT 9
 #define POUR_TIME_LIMIT 60000 //TODO ajustar para tempo certo
 
 
-Thermistor thermistor(0);
+Thermistor thermistor(5);
 
 bool makingCoffee = false;
 bool pouringWater = false;
 char incomingValue = STOP;
 
 unsigned long startingTime;
-unsigned long pourTime; 
+unsigned long pourTime;
+
+Servo servo;
 
 void setup()
 {
   pinMode(BOILER_RELAY_PORT, OUTPUT);
   pinMode(VALVE_RELAY_PORT, OUTPUT);
+  pinMode(DC_RELAY_PORT, OUTPUT);
+  
+  servo.attach(SERVO_PORT);
+  servo.write(0);
+
   stopBoilingWater();
   closeValve();
 
   Serial.begin(9600);
+  startingTime = millis();
 }
 
 void loop()
@@ -36,10 +49,11 @@ void loop()
 
     if (incomingValue == MAKE_COFFEE)
     {
+      Serial.println("recieved make coffee");
       if(!makingCoffee && !pouringWater)
         {
-          startBoilingWater();
           releaseCoffeeGrounds();
+          startBoilingWater();
         }
 
       makingCoffee = true;
@@ -47,35 +61,24 @@ void loop()
 
     else if (incomingValue == STOP)
     {
+      Serial.println("recieved stoo");
       stopBoilingWater();
       closeValve();
       makingCoffee = false;
       pouringWater = false;
     }
   }
-  Serial.print("makingCofee = ");
-  Serial.println(makingCoffee? "true" : "false");
-  Serial.print("PouringWater = ");
-  Serial.println(pouringWater? "true" : "false");
-  delay(200);
-  
-  if(makingCoffee)
+
+  if(makingCoffee && !pouringWater)
   {
-    if(!pouringWater)
+    int currentTemperature = thermistor.getTemp();
+    Serial.println(currentTemperature);
+    delay(300);
+    if(currentTemperature >= MAX_TEMPERATURE && currentTemperature > 0 && currentTemperature < 150)
     {
-      int currentTemperature = thermistor.getTemp();
-      Serial.println(currentTemperature);
-      Serial.println(thermistor.getTemp());
-      Serial.println(thermistor.getTemp());
-      if(currentTemperature >= MAX_TEMPERATURE && currentTemperature < 150)
-      {
-        stopBoilingWater();
-        startingTime = millis();
-        pourWater();
-      }
-    }
-    else
+      stopBoilingWater();
       pourWater();
+    }
   }
 }
  
@@ -106,14 +109,22 @@ void closeValve()
 
 void releaseCoffeeGrounds()
 {
-  //TODO Implement using servomotor.
+  digitalWrite(DC_RELAY_PORT, HIGH);
+  delay(1000);
+
+  servo.write(60);
+  delay(1000);
+  servo.write(0);
+  
+  delay(1000);
+  digitalWrite(DC_RELAY_PORT, LOW);
 }
 
 
 void pourWater()
 {
-  pourTime = millis() - startingTime;
-  //Serial.println(pourTime);
+  openValve();
+  /*pourTime = millis() - startingTime;
   if(pourTime >= POUR_TIME_LIMIT)
   {
     pouringWater = false;
@@ -124,11 +135,8 @@ void pourWater()
   {
     pouringWater = true;
     openValve();
-  }
+  }*/
 }
-
-
-
 
 
 

@@ -25,7 +25,7 @@ void loop() {
   else
     delay(4000);
 
-  servo.write(90);
+  servo.write(45);
   delay(2000);
   servo.write(0);
 }
