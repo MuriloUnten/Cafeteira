@@ -3,14 +3,14 @@
 
 #define MAKE_COFFEE '1'
 #define STOP '0'
-#define MAX_TEMPERATURE 48
+#define MAX_TEMPERATURE 75
 //#define MAX_TEMPERATURE 70
 //#define MAX_TEMPERATURE 85
 #define BOILER_RELAY_PORT 8
 #define VALVE_RELAY_PORT 12
 #define DC_RELAY_PORT 7
 #define SERVO_PORT 9
-#define POUR_TIME_LIMIT 60000 //TODO ajustar para tempo certo
+#define POUR_TIME_LIMIT 30000 //TODO ajustar para tempo certo
 
 
 Thermistor thermistor(5);
@@ -52,7 +52,16 @@ void loop()
       Serial.println("recieved make coffee");
       if(!makingCoffee && !pouringWater)
         {
-          releaseCoffeeGrounds();
+          digitalWrite(DC_RELAY_PORT, HIGH);
+          delay(1000UL);
+
+          servo.write(60);
+          delay(1000UL);
+          servo.write(0);
+          
+          delay(1000UL);
+          digitalWrite(DC_RELAY_PORT, LOW);
+          //releaseCoffeeGrounds();
           startBoilingWater();
         }
 
@@ -72,8 +81,6 @@ void loop()
   if(makingCoffee && !pouringWater)
   {
     int currentTemperature = thermistor.getTemp();
-    Serial.println(currentTemperature);
-    delay(300);
     if(currentTemperature >= MAX_TEMPERATURE && currentTemperature > 0 && currentTemperature < 150)
     {
       stopBoilingWater();
@@ -111,34 +118,36 @@ void closeValve()
 void releaseCoffeeGrounds()
 {
   digitalWrite(DC_RELAY_PORT, HIGH);
-  delay(1000);
+  delay(1000UL);
 
   servo.write(60);
-  delay(1000);
+  delay(1000UL);
   servo.write(0);
   
-  delay(1000);
+  delay(1000UL);
   digitalWrite(DC_RELAY_PORT, LOW);
 }
+
 
 
 void pourWater()
 {
   openValve();
-  delay(20000);
+  delay(75000UL);
   closeValve();
-  /*pourTime = millis() - startingTime;
-  if(pourTime >= POUR_TIME_LIMIT)
-  {
-    pouringWater = false;
-    makingCoffee = false;
-    closeValve();
-  }
-  else
-  {
-    pouringWater = true;
-    openValve();
-  }*/
+  
+  // pourTime = millis() - startingTime;
+  // if(pourTime >= POUR_TIME_LIMIT)
+  // {
+  //   pouringWater = false;
+  //   makingCoffee = false;
+  //   closeValve();
+  // }
+  // else
+  // {
+  //   pouringWater = true;
+  //   openValve();
+  // }
 }
 
 
